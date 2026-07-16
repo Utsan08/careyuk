@@ -40,7 +40,7 @@ const OPPS: Opp[] = [
   { id: 5, title: "Community Nutrition Screening", org: "Depok Community Clinic", typeKey: "clinic", zone: "Depok", distance: 6.0, when: "Wed 23 Jul", soon: 7, hours: 5, slots: "4 of 8 slots", match: 74, priority: false, emoji: "🥗", lat: -6.3835, lng: 106.8221, reason: "Nutrition screening near Depok — matches your nutrition interest.", avatar: "#D8F0C4", pinBg: "#8FD14F", tag: "CLINIC HELP", tagBg: "#EAF7E3", tagColor: "#3DA35D" },
 ];
 
-const disp = "var(--font-display,'Bricolage Grotesque',sans-serif)";
+const disp = "var(--font-display,'Geist','Inter',sans-serif)";
 const CIRC = 2 * Math.PI * 27;
 const TYPE_CHIPS = [{ key: "all", label: "All" }, { key: "event", label: "Events" }, { key: "clinic", label: "Clinic" }, { key: "shadow", label: "Shadowing" }] as const;
 const SORT_CHIPS = [{ key: "match", label: "Best match" }, { key: "near", label: "Nearest" }, { key: "soon", label: "Soonest" }] as const;

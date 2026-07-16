@@ -8,12 +8,12 @@ import { motion } from "framer-motion";
 /**
  * CareYuk — Login  ·  app/login/page.tsx
  * Owns role → route handoff: volunteer → /volunteer/explore, org → /org
- * npm i framer-motion. Fonts via next/font: --font-display (Bricolage Grotesque), --font-body (Plus Jakarta Sans).
+ * npm i framer-motion. Fonts via next/font: --font-display and --font-body both resolve to Geist.
  */
 
 type Role = "volunteer" | "org";
 const ease = [0.2, 0.8, 0.2, 1] as const;
-const disp = "var(--font-display,'Bricolage Grotesque',sans-serif)";
+const disp = "var(--font-display,'Geist','Inter',sans-serif)";
 const PHRASES = ["Care that comes full circle.", "Verified hours, real impact.", "Help where it\u2019s needed most.", "Grow while you give back."];
 
 function useCountUp(target: number, duration = 1600) {
