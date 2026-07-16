@@ -16,10 +16,13 @@ export function OrgSidebar({
   tab,
   onTabChange,
   pendingCount,
+  orgName,
 }: {
   tab: Tab;
   onTabChange: (tab: Tab) => void;
   pendingCount: number;
+  /** From /api/auth/session when signed in, otherwise the placeholder org. */
+  orgName: string;
 }) {
   return (
     <div
@@ -58,7 +61,7 @@ export function OrgSidebar({
             <Building2 className="size-[22px]" strokeWidth={2.2} />
           </div>
           <div className="min-w-0">
-            <div className="text-[14.5px] leading-[1.2] font-semibold text-[#F8F9F7]">Posyandu Melati</div>
+            <div className="truncate text-[14.5px] leading-[1.2] font-semibold text-[#F8F9F7]">{orgName}</div>
             <div className="text-[11px] font-semibold text-[#EAF7E3]/55">RW 04 Cipedak</div>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Check, Loader2, Plus } from "lucide-react";
 
 import {
   BASE_TYPES,
@@ -15,20 +15,32 @@ const inputClass =
   "w-full rounded-xl border-[1.5px] border-[#E2E8DE] bg-[#FBFDFA] px-[15px] py-[13px] font-semibold text-[#202320] outline-none transition focus:border-[#8FD14F] focus:shadow-[0_0_0_4px_rgba(143,209,79,.16)]";
 const cardClass = "rounded-[22px] border border-[#E9EFE6] bg-white p-6 shadow-[0_10px_30px_-22px_rgba(28,61,39,.4)]";
 
+export type OpportunityForm = {
+  title: string;
+  when: string;
+  where: string;
+  notes: string;
+};
+
 export type PostTabProps = {
   postType: string;
   onPostTypeChange: (type: string) => void;
   customTypes: string[];
   onAddCustomType: (type: string) => void;
   slots: number;
-  onSlotsChange: (next: number) => void;
+  /** Takes an updater, not a value — two clicks in one tick would otherwise both read a stale count. */
+  onSlotsChange: (update: (current: number) => number) => void;
   hours: number;
-  onHoursChange: (next: number) => void;
+  onHoursChange: (update: (current: number) => number) => void;
   faculties: Record<string, boolean>;
   onToggleFaculty: (faculty: string) => void;
   onAddFaculty: (faculty: string) => void;
+  form: OpportunityForm;
+  onFormChange: (patch: Partial<OpportunityForm>) => void;
   published: boolean;
+  busy: boolean;
   onPublish: () => void;
+  onSaveDraft: () => void;
 };
 
 export function PostTab({
@@ -43,8 +55,12 @@ export function PostTab({
   faculties,
   onToggleFaculty,
   onAddFaculty,
+  form,
+  onFormChange,
   published,
+  busy,
   onPublish,
+  onSaveDraft,
 }: PostTabProps) {
   const [addingType, setAddingType] = useState(false);
   const [newType, setNewType] = useState("");
@@ -79,7 +95,9 @@ export function PostTab({
           <FieldLabel htmlFor="opp-title">Opportunity title</FieldLabel>
           <input
             id="opp-title"
-            defaultValue="Maternal & Child Health Drive"
+            value={form.title}
+            onChange={(e) => onFormChange({ title: e.target.value })}
+            placeholder="e.g. Maternal & Child Health Drive"
             className={`${inputClass} mb-[18px] text-[14.5px]`}
           />
 
@@ -142,8 +160,8 @@ export function PostTab({
               <Stepper
                 value={`${slots}`}
                 label="slots"
-                onDec={() => onSlotsChange(Math.max(1, slots - 1))}
-                onInc={() => onSlotsChange(slots + 1)}
+                onDec={() => onSlotsChange((s) => Math.max(1, s - 1))}
+                onInc={() => onSlotsChange((s) => s + 1)}
               />
             </div>
             <div>
@@ -151,8 +169,8 @@ export function PostTab({
               <Stepper
                 value={`${hours}h`}
                 label="hours"
-                onDec={() => onHoursChange(Math.max(1, hours - 1))}
-                onInc={() => onHoursChange(hours + 1)}
+                onDec={() => onHoursChange((h) => Math.max(1, h - 1))}
+                onInc={() => onHoursChange((h) => h + 1)}
               />
             </div>
           </div>
@@ -160,11 +178,23 @@ export function PostTab({
           <div className="mb-[18px] grid grid-cols-2 gap-4">
             <div>
               <FieldLabel htmlFor="opp-when">Date &amp; time</FieldLabel>
-              <input id="opp-when" defaultValue="Sat 19 Jul · 08:00" className={`${inputClass} text-[13.5px]`} />
+              <input
+                id="opp-when"
+                value={form.when}
+                onChange={(e) => onFormChange({ when: e.target.value })}
+                placeholder="Sat 19 Jul · 08:00"
+                className={`${inputClass} text-[13.5px]`}
+              />
             </div>
             <div>
               <FieldLabel htmlFor="opp-where">Location</FieldLabel>
-              <input id="opp-where" defaultValue="RW 04 Cipedak, Jakarta" className={`${inputClass} text-[13.5px]`} />
+              <input
+                id="opp-where"
+                value={form.where}
+                onChange={(e) => onFormChange({ where: e.target.value })}
+                placeholder="RW 04 Cipedak, Jakarta"
+                className={`${inputClass} text-[13.5px]`}
+              />
             </div>
           </div>
 
@@ -225,7 +255,8 @@ export function PostTab({
           <textarea
             id="opp-bring"
             rows={3}
-            defaultValue="Comfortable clothes, a water bottle, and enthusiasm. Basic training provided on-site by our certified volunteers."
+            value={form.notes}
+            onChange={(e) => onFormChange({ notes: e.target.value })}
             className={`${inputClass} resize-none text-[13.5px] leading-[1.5] font-normal`}
           />
         </div>
@@ -274,14 +305,29 @@ export function PostTab({
         <button
           type="button"
           onClick={onPublish}
-          className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-[14px] py-[15px] text-[15px] font-semibold text-[#0f2a17] shadow-[0_12px_26px_-10px_rgba(143,209,79,.7)] transition-transform hover:-translate-y-0.5"
-          style={{ background: "linear-gradient(120deg,#8FD14F,#3DA35D)" }}
+          disabled={busy}
+          className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-[14px] py-[15px] text-[15px] font-semibold text-[#0f2a17] shadow-[0_12px_26px_-10px_rgba(143,209,79,.7)] transition-all hover:-translate-y-0.5 active:translate-y-0 disabled:cursor-wait disabled:opacity-70 disabled:hover:translate-y-0"
+          style={{ background: published ? "linear-gradient(120deg,#6cbf3f,#2e8c4c)" : "linear-gradient(120deg,#8FD14F,#3DA35D)" }}
         >
-          {published ? "✓ Published — live for volunteers" : "Publish opportunity"}
+          {busy ? (
+            <>
+              <Loader2 className={`size-4 ${styles.spin}`} strokeWidth={2.6} />
+              Publishing…
+            </>
+          ) : published ? (
+            <>
+              <Check className="size-4" strokeWidth={3} />
+              Published — live for volunteers
+            </>
+          ) : (
+            "Publish opportunity"
+          )}
         </button>
         <button
           type="button"
-          className="w-full cursor-pointer rounded-[14px] border-[1.5px] border-[#E2E8DE] bg-white py-[13px] text-[14px] font-semibold text-[#516155] transition hover:bg-[#F1F6EE]"
+          onClick={onSaveDraft}
+          disabled={busy}
+          className="w-full cursor-pointer rounded-[14px] border-[1.5px] border-[#E2E8DE] bg-white py-[13px] text-[14px] font-semibold text-[#516155] transition-all hover:bg-[#F1F6EE] active:scale-[.99] disabled:opacity-60"
         >
           Save as draft
         </button>

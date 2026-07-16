@@ -133,6 +133,17 @@ export const HEADERS: Record<Tab, [string, string]> = {
   prog: ["Progress", "Track volunteers growing into certified community health workers."],
 };
 
+/**
+ * Org-facing notifications. Placeholder — /api/notifications is volunteer-scoped
+ * (it takes volunteerId), so there's no org feed to read from yet.
+ */
+export const NOTIFICATIONS: { id: number; title: string; body: string; time: string }[] = [
+  { id: 1, title: "New applicant", body: "Rina Wulandari applied to Maternal & Child Health Drive.", time: "2 min ago" },
+  { id: 2, title: "Check-in complete", body: "Dewi Anggraini was verified on-site — 4h credited.", time: "18 min ago" },
+  { id: 3, title: "Slots filling up", body: "Maternal & Child Health Drive is 5 of 8 filled.", time: "1 hour ago" },
+  { id: 4, title: "Volunteer ready to certify", body: "Ibu Dewi finished module 2 of 3.", time: "Yesterday" },
+];
+
 /** Footer stats on the left rail. */
 export const SIDEBAR_STATS: { label: string; value: string }[] = [
   { label: "People helped", value: "1,284" },
@@ -199,6 +210,17 @@ export const PIPELINE: { title: string; count: number; people: PipelinePerson[] 
 
 /** XP awarded per verified hour. */
 export const XP_PER_HOUR = 25;
+
+/** Manual check-in code for this opportunity. The backend generates a real one per event (events.qr_code). */
+export const CHECKIN_CODE = "CYK-4821";
+
+/** Default copy for a new opportunity — the form starts prefilled so the demo has something to publish. */
+export const DEFAULT_FORM = {
+  title: "Maternal & Child Health Drive",
+  when: "Sat 19 Jul · 08:00",
+  where: "RW 04 Cipedak, Jakarta",
+  notes: "Comfortable clothes, a water bottle, and enthusiasm. Basic training provided on-site by our certified volunteers.",
+};
 
 export function initials(name: string) {
   return name
