@@ -1,0 +1,166 @@
+/*
+ * Scoped to the org dashboard. Keyframes live here rather than in
+ * app/globals.css so the feature stays self-contained, and rather than in
+ * <style jsx> because styled-jsx in the App Router needs a style registry
+ * wired into the root layout.
+ */
+
+@keyframes fadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes tabIn {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.995);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes shine {
+  0% {
+    transform: translateX(-130%) skewX(-18deg);
+  }
+  55%,
+  100% {
+    transform: translateX(360%) skewX(-18deg);
+  }
+}
+
+@keyframes blobMove {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(24px, -30px) scale(1.15);
+  }
+}
+
+@keyframes floaty {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes pulseDot {
+  0% {
+    box-shadow: 0 0 0 0 rgba(143, 209, 79, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 12px rgba(143, 209, 79, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(143, 209, 79, 0);
+  }
+}
+
+@keyframes scanline {
+  0% {
+    top: 6%;
+  }
+  100% {
+    top: 94%;
+  }
+}
+
+.shell {
+  animation: fadeIn 0.5s ease both;
+}
+
+.fadeUp {
+  animation: fadeUp 0.5s ease both;
+}
+
+.fadeUpDelayed {
+  animation: fadeUp 0.5s ease both 0.06s;
+}
+
+.fadeUpFast {
+  animation: fadeUp 0.35s ease both;
+}
+
+.tabIn {
+  animation: tabIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.blob {
+  animation: blobMove 24s ease-in-out infinite;
+}
+
+.shine {
+  animation: shine 4.5s ease-in-out infinite;
+}
+
+.floaty {
+  animation: floaty 4s ease-in-out infinite;
+}
+
+.pulseDot {
+  animation: pulseDot 1.8s infinite;
+}
+
+.scanline {
+  animation: scanline 2.2s ease-in-out infinite alternate;
+}
+
+/* Reward preview rides alongside the form, then drops below it on narrow screens. */
+.postGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 22px;
+}
+
+.reward {
+  position: sticky;
+  top: 0;
+  align-self: start;
+}
+
+@media (max-width: 1100px) {
+  .postGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .reward {
+    position: static;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell,
+  .fadeUp,
+  .fadeUpDelayed,
+  .fadeUpFast,
+  .tabIn,
+  .blob,
+  .shine,
+  .floaty,
+  .pulseDot,
+  .scanline {
+    animation: none;
+  }
+}
