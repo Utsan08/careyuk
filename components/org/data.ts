@@ -7,10 +7,10 @@ import { Calendar, Droplet, Eye, Heart, Stethoscope, Tag } from "lucide-react";
  * POST /api/opportunities, POST /api/checkin.
  */
 
-/** Display face for headings and figures. Variable is set by app/org/layout.tsx. */
-export const displayFont = "var(--font-bricolage), sans-serif";
+/** Display face for headings and figures. app/org/layout.tsx points --font-display at Geist for /org. */
+export const displayFont = "var(--font-display,'Geist','Inter',sans-serif)";
 
-export type Tab = "post" | "appl" | "chk";
+export type Tab = "post" | "appl" | "chk" | "prog";
 export type Decision = "accepted" | "rejected";
 
 export type Applicant = {
@@ -124,10 +124,78 @@ export const REWARDS: Record<string, { badge: string; icon: LucideIcon }> = {
 export const FALLBACK_REWARD = { badge: "Community Volunteer", icon: Heart };
 
 export const HEADERS: Record<Tab, [string, string]> = {
-  post: ["Post an opportunity", "Create a ticket — volunteers get matched and earn verified hours."],
-  appl: ["Applicants", "Review matched volunteers and build your team."],
+  post: [
+    "Post an opportunity",
+    "Build healthier communities by creating opportunities for volunteers to serve and grow.",
+  ],
+  appl: ["Applicants", "Review matched volunteers and build your healthy community"],
   chk: ["Live check-in", "Stamp volunteers verified on-site with a QR scan."],
+  prog: ["Progress", "Track volunteers growing into certified community health workers."],
 };
+
+/** Footer stats on the left rail. */
+export const SIDEBAR_STATS: { label: string; value: string }[] = [
+  { label: "People helped", value: "1,284" },
+  { label: "Volunteers developed", value: "47" },
+];
+
+export type PipelinePerson = {
+  name: string;
+  meta: string;
+  avatar: string;
+  /** Pull-quote explaining why they were flagged, or what they do now. */
+  note?: string;
+  /** Training completion, e.g. "66%". Renders a progress bar instead of a note. */
+  barPct?: string;
+};
+
+/** Citizen → certified volunteer pipeline shown on the Progress tab. */
+export const PIPELINE: { title: string; count: number; people: PipelinePerson[] }[] = [
+  {
+    title: "Flagged",
+    count: 3,
+    people: [
+      {
+        name: "Ibu Sari",
+        meta: "RT 03 · 5 sessions attended",
+        avatar: "#F6C9D6",
+        note: "“Asked follow-up questions at 3 straight sessions”",
+      },
+      {
+        name: "Pak Herman",
+        meta: "RT 05 · 4 sessions attended",
+        avatar: "#BFE0FF",
+        note: "“Helped translate for neighbors during screening”",
+      },
+    ],
+  },
+  {
+    title: "In training",
+    count: 2,
+    people: [
+      { name: "Ibu Dewi", meta: "RT 01 · Module 2 of 3", avatar: "#C9F3B0", barPct: "66%" },
+      { name: "Ibu Yuli", meta: "RT 07 · Module 3 of 3", avatar: "#FFE3B0", barPct: "95%" },
+    ],
+  },
+  {
+    title: "Certified",
+    count: 4,
+    people: [
+      {
+        name: "Ibu Ratna",
+        meta: "RT 02 · now mentoring 2",
+        avatar: "#D8F0C4",
+        note: "Certified 3 months ago · runs monthly monitoring solo",
+      },
+      {
+        name: "Pak Agus",
+        meta: "RT 04 · now mentoring 1",
+        avatar: "#EFEAF0",
+        note: "Certified 2 months ago · leads hypertension check-ins",
+      },
+    ],
+  },
+];
 
 /** XP awarded per verified hour. */
 export const XP_PER_HOUR = 25;

@@ -20,7 +20,7 @@ export function CheckinTab({
   return (
     <div className={`grid gap-[22px] [grid-template-columns:360px_1fr] ${styles.tabIn}`}>
       <div className={`${cardClass} self-start text-center`}>
-        <div className="mb-1 text-[12px] font-bold text-[#3f4a43]">Scan to verify on-site</div>
+        <div className="mb-1 text-[12px] font-semibold text-[#3f4a43]">Scan to verify on-site</div>
         <div className="mb-[18px] text-[11.5px] text-[#69746A]">Maternal &amp; Child Health Drive</div>
         <div className="relative mx-auto h-[206px] w-[206px] rounded-[20px] border border-[#E9EFE6] bg-white p-4 shadow-[0_8px_22px_-12px_rgba(28,61,39,.35)]">
           <div
@@ -38,12 +38,12 @@ export function CheckinTab({
           <input
             defaultValue="CYK-4821"
             aria-label="Check-in code"
-            className="flex-1 rounded-[11px] border-[1.5px] border-[#E2E8DE] bg-[#FBFDFA] p-[11px] text-center font-extrabold tracking-[.14em] text-[#23472D] outline-none focus:border-[#8FD14F]"
+            className="flex-1 rounded-[11px] border-[1.5px] border-[#E2E8DE] bg-[#FBFDFA] p-[11px] text-center font-semibold tracking-[.14em] text-[#23472D] outline-none focus:border-[#8FD14F]"
           />
           <button
             type="button"
             onClick={onScan}
-            className="cursor-pointer rounded-[11px] bg-[#23472D] px-4 text-[12.5px] font-bold text-white"
+            className="cursor-pointer rounded-[11px] bg-[#23472D] px-4 text-[12.5px] font-semibold text-white"
           >
             Verify
           </button>
@@ -53,7 +53,7 @@ export function CheckinTab({
       <div className={`${cardClass} flex min-h-0 flex-col`}>
         <div className="mb-[18px] flex items-center justify-between">
           <div>
-            <div className="text-[22px] font-bold" style={{ fontFamily: displayFont }}>
+            <div className="text-[22px] font-semibold" style={{ fontFamily: displayFont }}>
               {checkedIn} <span className="text-base text-[#9aa39c]">/ {TOTAL_SLOTS} checked in</span>
             </div>
             <div className="text-[12px] text-[#69746A]">Verified stamps land on volunteer portfolios instantly</div>
@@ -61,7 +61,7 @@ export function CheckinTab({
           <button
             type="button"
             onClick={onScan}
-            className="flex shrink-0 cursor-pointer items-center gap-[7px] rounded-xl px-[15px] py-2.5 text-[12.5px] font-extrabold text-[#0f2a17] hover:brightness-105"
+            className="flex shrink-0 cursor-pointer items-center gap-[7px] rounded-xl px-[15px] py-2.5 text-[12.5px] font-semibold text-[#0f2a17] hover:brightness-105"
             style={{ background: "linear-gradient(120deg,#8FD14F,#3DA35D)" }}
           >
             <span className={`h-2 w-2 rounded-full bg-[#0f2a17] ${styles.pulseDot}`} />
@@ -74,7 +74,7 @@ export function CheckinTab({
             style={{ background: "linear-gradient(90deg,#8FD14F,#3DA35D)", width: `${pct}%` }}
           />
         </div>
-        <div className="mb-2.5 text-[11px] font-extrabold tracking-[.04em] text-[#69746A] uppercase">
+        <div className="mb-2.5 text-[11px] font-semibold tracking-[.04em] text-[#69746A] uppercase">
           Verified so far
         </div>
         <div className="flex flex-col gap-2 overflow-y-auto">
@@ -84,19 +84,19 @@ export function CheckinTab({
               className={`flex items-center gap-3 rounded-[13px] border border-[#EEF3EC] bg-[#F7FAF5] px-3.5 py-[11px] ${styles.fadeUpFast}`}
             >
               <div
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] text-[13px] font-bold text-[#1c3d27]"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] text-[13px] font-semibold text-[#1c3d27]"
                 style={{ background: v.avatar, fontFamily: displayFont }}
               >
                 {initials(v.name)}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-[13.5px] font-bold">{v.name}</div>
+                <div className="text-[13.5px] font-semibold">{v.name}</div>
                 <div className="text-[11px] text-[#69746A]">
                   {v.faculty} · {v.hours}h credited
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-[12px] font-bold text-[#3DA35D]">✓ Verified</div>
+                <div className="text-[12px] font-semibold text-[#3DA35D]">✓ Verified</div>
                 <div className="text-[11px] text-[#9aa39c]">{v.time}</div>
               </div>
             </div>

@@ -1,19 +1,24 @@
-import { Bricolage_Grotesque, Plus_Jakarta_Sans } from "next/font/google";
-
 /**
- * Fonts are scoped to /org rather than added to the root layout, so the org
- * dashboard stays self-contained and doesn't collide with the other areas.
+ * The design handoff specifies Geist for the org dashboard, read through
+ * `--font-display`. The root layout points that variable at Bricolage for the
+ * rest of the app, so we override it here rather than in the root — /org gets
+ * Geist without restyling the volunteer and login pages.
+ *
+ * Geist is already loaded by the root layout as --font-geist-sans, so there's
+ * no second font request.
  */
-const bricolage = Bricolage_Grotesque({
-  variable: "--font-bricolage",
-  subsets: ["latin"],
-});
-
-const jakarta = Plus_Jakarta_Sans({
-  variable: "--font-jakarta",
-  subsets: ["latin"],
-});
-
 export default function OrgLayout({ children }: { children: React.ReactNode }) {
-  return <div className={`${bricolage.variable} ${jakarta.variable} flex flex-1 flex-col`}>{children}</div>;
+  return (
+    <div
+      className="flex flex-1 flex-col"
+      style={
+        {
+          "--font-display": "var(--font-geist-sans)",
+          fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
+        } as React.CSSProperties
+      }
+    >
+      {children}
+    </div>
+  );
 }

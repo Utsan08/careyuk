@@ -87,6 +87,12 @@
   }
 }
 
+@keyframes barGrow {
+  0% {
+    width: 0;
+  }
+}
+
 .shell {
   animation: fadeIn 0.5s ease both;
 }
@@ -127,6 +133,10 @@
   animation: scanline 2.2s ease-in-out infinite alternate;
 }
 
+.barGrow {
+  animation: barGrow 1s ease both;
+}
+
 /* Reward preview rides alongside the form, then drops below it on narrow screens. */
 .postGrid {
   display: grid;
@@ -160,7 +170,8 @@
   .shine,
   .floaty,
   .pulseDot,
-  .scanline {
+  .scanline,
+  .barGrow {
     animation: none;
   }
 }
