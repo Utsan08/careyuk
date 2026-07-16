@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
+import { DEMO_APPLICANT_ID, useDemoApplications } from "@/lib/demoStore";
 import { ApplicantsTab } from "./applicants-tab";
 import { CheckinTab } from "./checkin-tab";
 import {
@@ -36,8 +37,24 @@ export function OrgDashboard() {
   const [faculties, setFaculties] = useState<Record<string, boolean>>(INITIAL_FACULTIES);
   const [published, setPublished] = useState(false);
 
-  // Applicants
+  // Applicants — Rina (id 1) is the live demo application shared with the volunteer app.
   const [appStatus, setAppStatus] = useState<Record<number, Decision>>({});
+  const demo = useDemoApplications();
+
+  // Restore/sync the org's decision on Rina from the shared store (survives reloads,
+  // and reflects a decision made in another tab).
+  useEffect(() => {
+    const st = demo.apps[DEMO_APPLICANT_ID];
+    if (st === "accepted" || st === "rejected") {
+      setAppStatus((s) => (s[DEMO_APPLICANT_ID] ? s : { ...s, [DEMO_APPLICANT_ID]: st }));
+    }
+  }, [demo.apps]);
+
+  const decide = (id: number, decision: Decision) => {
+    setAppStatus((s) => ({ ...s, [id]: decision }));
+    // push the decision back to the volunteer app, but only if Rina actually applied there
+    if (id === DEMO_APPLICANT_ID && demo.apps[DEMO_APPLICANT_ID]) demo.setStatus(DEMO_APPLICANT_ID, decision);
+  };
 
   // Check-in
   const [checkedIn, setCheckedIn] = useState(INITIAL_VERIFIED.length);
@@ -64,14 +81,14 @@ export function OrgDashboard() {
 
   return (
     <div
-      className="min-h-screen w-full p-5 text-[#202320]"
+      className="min-h-screen w-full text-[#202320]"
       style={{
         background: "radial-gradient(900px 500px at 85% 0%,#EAF7E3,transparent 60%),#E7EDE6",
         fontFamily: "var(--font-jakarta), system-ui, sans-serif",
       }}
     >
       <div
-        className={`flex h-[calc(100vh-40px)] min-h-[700px] overflow-hidden rounded-[30px] bg-white shadow-[0_30px_70px_-30px_rgba(28,61,39,.45),0_4px_14px_rgba(28,61,39,.08)] ${styles.shell}`}
+        className={`flex h-screen min-h-[700px] overflow-hidden bg-white ${styles.shell}`}
       >
         <OrgSidebar tab={tab} onTabChange={setTab} pendingCount={pendingCount} />
 
@@ -100,7 +117,8 @@ export function OrgDashboard() {
             {tab === "appl" && (
               <ApplicantsTab
                 appStatus={appStatus}
-                onDecide={(id, decision) => setAppStatus((s) => ({ ...s, [id]: decision }))}
+                onDecide={decide}
+                liveApplied={demo.apps[DEMO_APPLICANT_ID] === "pending"}
               />
             )}
 

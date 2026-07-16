@@ -1,5 +1,6 @@
 import { Check, X } from "lucide-react";
 
+import { DEMO_APPLICANT_ID } from "@/lib/demoStore";
 import {
   APPLICANTS,
   displayFont,
@@ -16,9 +17,11 @@ const rowClass = "grid gap-3 [grid-template-columns:2.4fr_1.3fr_1fr_1.3fr]";
 export function ApplicantsTab({
   appStatus,
   onDecide,
+  liveApplied,
 }: {
   appStatus: Record<number, Decision>;
   onDecide: (id: number, decision: Decision) => void;
+  liveApplied?: boolean;
 }) {
   const acceptedCount = Object.values(appStatus).filter((v) => v === "accepted").length;
 
@@ -58,10 +61,11 @@ export function ApplicantsTab({
         {APPLICANTS.map((a) => {
           const decision = appStatus[a.id];
           const color = matchColor(a.match);
+          const isLive = !!liveApplied && a.id === DEMO_APPLICANT_ID && !decision;
           return (
             <div
               key={a.id}
-              className={`${rowClass} items-center border-t border-[#EEF3EC] px-[22px] py-4 transition-colors hover:bg-[#FAFCF8]`}
+              className={`${rowClass} items-center border-t border-[#EEF3EC] px-[22px] py-4 transition-colors ${isLive ? "bg-[#F3FBED]" : "hover:bg-[#FAFCF8]"}`}
             >
               <div className="flex min-w-0 items-center gap-3">
                 <div
@@ -71,7 +75,15 @@ export function ApplicantsTab({
                   {initials(a.name)}
                 </div>
                 <div className="min-w-0">
-                  <div className="text-sm font-bold">{a.name}</div>
+                  <div className="flex items-center gap-2">
+                    <div className="text-sm font-bold">{a.name}</div>
+                    {isLive && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[#EAF7E3] px-2 py-[2px] text-[9.5px] font-extrabold tracking-[.03em] text-[#3DA35D]">
+                        <span className={`h-1.5 w-1.5 rounded-full bg-[#3DA35D] ${styles.pulseDot}`} />
+                        JUST APPLIED
+                      </span>
+                    )}
+                  </div>
                   <div className="text-[11.5px] font-semibold text-[#69746A]">
                     {a.level} · {a.faculty}
                   </div>

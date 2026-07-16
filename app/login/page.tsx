@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 
 /**
  * CareYuk — Login  ·  app/login/page.tsx
- * Owns role → route handoff: volunteer → /volunteer/explore, org → /org/post
+ * Owns role → route handoff: volunteer → /volunteer/explore, org → /org
  * npm i framer-motion. Fonts via next/font: --font-display (Bricolage Grotesque), --font-body (Plus Jakarta Sans).
  */
 
@@ -43,11 +43,11 @@ function useTypewriter() {
       setTyped((cur) => {
         if (!s.del) {
           const next = p.slice(0, cur.length + 1);
-          if (next === p) { s.del = true; timer = setTimeout(step, 1600); } else timer = setTimeout(step, 65);
+          if (next === p) { s.del = true; timer = setTimeout(step, 2400); } else timer = setTimeout(step, 115);
           return next;
         } else {
           const next = p.slice(0, cur.length - 1);
-          if (next === "") { s.del = false; s.i = (s.i + 1) % PHRASES.length; timer = setTimeout(step, 340); } else timer = setTimeout(step, 34);
+          if (next === "") { s.del = false; s.i = (s.i + 1) % PHRASES.length; timer = setTimeout(step, 520); } else timer = setTimeout(step, 60);
           return next;
         }
       });
@@ -73,8 +73,9 @@ export default function LoginPage() {
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: supabase.auth.signInWithPassword — on success:
-    router.push(isVol ? "/volunteer/explore" : "/org/post");
+    // Auth is not wired yet — for now the role toggle just routes to the
+    // matching dashboard: volunteer → /volunteer/explore, org → /org.
+    router.push(isVol ? "/volunteer/explore" : "/org");
   };
 
   const chips = [
@@ -175,7 +176,7 @@ export default function LoginPage() {
             <label className="mb-[7px] block text-[12.5px] font-semibold text-[#3f4a43]">Email</label>
             <div className="relative mb-[18px]">
               <span className="absolute left-[15px] top-1/2 -translate-y-1/2 text-base opacity-50">✉️</span>
-              <input type="email" placeholder="you@example.com" required
+              <input type="email" placeholder="you@example.com"
                 className="w-full rounded-[14px] border-[1.5px] border-[#E2E8DE] bg-white py-[14px] pl-[44px] pr-4 text-[15px] outline-none transition focus:border-[#8FD14F] focus:shadow-[0_0_0_4px_rgba(143,209,79,.18)]" />
             </div>
 
@@ -185,7 +186,7 @@ export default function LoginPage() {
             </div>
             <div className="relative mb-[18px]">
               <span className="absolute left-[15px] top-1/2 -translate-y-1/2 text-base opacity-50">🔒</span>
-              <input type={showPw ? "text" : "password"} placeholder="••••••••" required
+              <input type={showPw ? "text" : "password"} placeholder="••••••••"
                 className="w-full rounded-[14px] border-[1.5px] border-[#E2E8DE] bg-white py-[14px] pl-[44px] pr-[46px] text-[15px] outline-none transition focus:border-[#8FD14F] focus:shadow-[0_0_0_4px_rgba(143,209,79,.18)]" />
               <button type="button" onClick={() => setShowPw((s) => !s)} aria-label="Show password" className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-2 text-base opacity-55">
                 {showPw ? "🙈" : "👁️"}
