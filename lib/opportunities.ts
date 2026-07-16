@@ -44,13 +44,16 @@ export function mapFeedOpportunityRow(
     zoneId: string | null;
   }
 ) {
-  const { type, slotsTotal, facultiesWanted, levelsWanted } = parseEventTags(row.event_tags);
+  const { type, slotsTotal, facultiesWanted, levelsWanted, interestTags } = parseEventTags(row.event_tags);
   const slotsFilled = row.participants.filter((p) => p.application_status === "accepted").length;
 
   const match = matchVolunteerToOpportunity(volunteer, {
     id: row.event_id,
     facultiesWanted,
     levelsWanted,
+    interestTags,
+    slotsTotal,
+    slotsFilled,
     lat: null,
     lng: null,
     zoneId: row.zone_id,
@@ -69,7 +72,8 @@ export function mapFeedOpportunityRow(
     match_reason: match.match_reason,
     zone_name: row.zones?.zone_name ?? null,
     // Needs community_health_score to determine "low-score zone" — that
-    // column doesn't exist (no schema changes per project decision).
-    priority: false,
+    // column doesn't exist (no schema changes per project decision), so
+    // matchVolunteerToOpportunity gets no zones list and priority is always false.
+    priority: match.priority,
   };
 }
