@@ -3,6 +3,7 @@ import { createRouteClient } from "@/lib/supabase/route";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getProfileById } from "@/lib/profile";
 import { roleToDb, type ContractRole } from "@/lib/role";
+import { insertRoleRow } from "@/lib/insert-role-row";
 
 /**
  * Creates the app profile for an already-authenticated user.
@@ -62,25 +63,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: profileError.message }, { status: 500 });
   }
 
-  const roleInsert =
-    role === "volunteer"
-      ? admin.from("student").insert({
-          user_id: user.id,
-          display_name: name,
-          email,
-          faculty: faculty ?? null,
-          interest: interests ?? null,
-          bio: bio ?? null,
-          zone_id: zone_id ?? null,
-        })
-      : admin.from("organization").insert({
-          user_id: user.id,
-          display_name: name,
-          email,
-          bio: bio ?? null,
-        });
-
-  const { error: roleError } = await roleInsert;
+  const { error: roleError } = await insertRoleRow(admin, {
+    userId: user.id,
+    role,
+    full_name: name,
+    email,
+    faculty,
+    interests,
+    bio,
+    zone_id,
+  });
 
   if (roleError) {
     await admin.from("user_auth").delete().eq("user_id", user.id);

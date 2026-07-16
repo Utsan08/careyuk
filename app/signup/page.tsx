@@ -6,16 +6,19 @@ import Image from "next/image";
 import { ArrowLeft, ArrowRight, Check, Loader2, MapPin, Sparkles } from "lucide-react";
 
 import { createClient, isProviderEnabled } from "@/lib/supabase/client";
-import { FACULTY_LABELS, FACULTY_OPTIONS, INTEREST_OPTIONS } from "@/lib/profile-options";
+import { FACULTY_LABELS, FACULTY_OPTIONS, INTEREST_OPTIONS, toJakartaRegions } from "@/lib/profile-options";
 import styles from "./signup.module.css";
 
 const disp = "var(--font-display,'Geist','Inter',sans-serif)";
 type Role = "volunteer" | "org";
 type Zone = { id: string; name: string };
 
-/** Account details -> faculty -> interests -> home zone. Orgs skip the volunteer-only steps. */
-const VOLUNTEER_STEPS = ["Account", "Study", "Interests", "Zone"];
-const ORG_STEPS = ["Account"];
+/**
+ * Volunteers: account -> faculty -> interests -> home region.
+ * Orgs: account -> the region they serve + a short description.
+ */
+const VOLUNTEER_STEPS = ["Account", "Study", "Interests", "Region"];
+const ORG_STEPS = ["Account", "Organisation"];
 
 export default function SignupPage() {
   return (
@@ -41,6 +44,7 @@ function SignupFlow() {
   const [faculty, setFaculty] = useState<string>("");
   const [interests, setInterests] = useState<string[]>([]);
   const [zoneId, setZoneId] = useState<string>("");
+  const [bio, setBio] = useState("");
   const [zones, setZones] = useState<Zone[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +54,10 @@ function SignupFlow() {
   useEffect(() => {
     fetch("/api/zones")
       .then((r) => (r.ok ? r.json() : []))
-      .then((z) => Array.isArray(z) && setZones(z.map((x: { id: string; name: string }) => ({ id: x.id, name: x.name }))))
+      .then((z) => {
+        if (!Array.isArray(z)) return;
+        setZones(toJakartaRegions(z.map((x: { id: string; name: string }) => ({ id: x.id, name: x.name }))));
+      })
       .catch(() => {});
   }, []);
 
@@ -73,6 +80,7 @@ function SignupFlow() {
 
   const canAdvance = () => {
     if (step === 0) return fullName.trim() && email.trim() && password.length >= 6;
+    if (role === "org") return !!zoneId; // org step 1: region is the only required field
     if (step === 1) return !!faculty;
     if (step === 2) return interests.length > 0;
     if (step === 3) return !!zoneId;
@@ -86,9 +94,10 @@ function SignupFlow() {
     const body = {
       full_name: fullName.trim(),
       role,
-      faculty: faculty || undefined,
-      interests,
+      faculty: role === "volunteer" ? faculty || undefined : undefined,
+      interests: role === "volunteer" ? interests : undefined,
       zone_id: zoneId || undefined,
+      bio: bio.trim() || undefined,
     };
 
     // OAuth users already have a session — they only need the profile rows.
@@ -253,7 +262,47 @@ function SignupFlow() {
               </>
             )}
 
-            {step === 1 && (
+            {step === 1 && role === "org" && (
+              <>
+                <h1 className="text-[27px] leading-[1.15] font-semibold tracking-[-.028em]" style={{ fontFamily: disp }}>
+                  Which region do you serve?
+                </h1>
+                <p className="mt-1 mb-5 flex items-center gap-1.5 text-[13px] font-medium text-[#8a938b]">
+                  <MapPin className="size-3.5 text-[#8FD14F]" strokeWidth={2.4} />
+                  Volunteers in your region see your opportunities first.
+                </p>
+                <div className="mb-5 grid grid-cols-2 gap-2">
+                  {zones.map((z) => {
+                    const on = zoneId === z.id;
+                    return (
+                      <button
+                        key={z.id}
+                        type="button"
+                        onClick={() => setZoneId(z.id)}
+                        className="cursor-pointer rounded-[14px] border-[1.5px] px-4 py-3 text-left text-[13px] font-semibold transition-all active:scale-[.99]"
+                        style={{ borderColor: on ? "#8FD14F" : "#E2E8DE", background: on ? "#EAF7E3" : "#fff", color: on ? "#23472D" : "#516155" }}
+                      >
+                        {z.name}
+                      </button>
+                    );
+                  })}
+                  {zones.length === 0 && <div className="col-span-2 text-[12.5px] text-[#8a938b]">Couldn&apos;t load regions.</div>}
+                </div>
+                <label className="mb-[7px] flex items-center justify-between text-[12px] font-semibold text-[#3f4a43]">
+                  About your organisation
+                  <span className="text-[11px] font-medium text-[#9aa39c]">Optional</span>
+                </label>
+                <textarea
+                  rows={3}
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  placeholder="e.g. A community Posyandu running monthly weighing days and maternal health drives."
+                  className={`${inputCls} resize-none leading-[1.5]`}
+                />
+              </>
+            )}
+
+            {step === 1 && role === "volunteer" && (
               <>
                 <h1 className="text-[27px] leading-[1.15] font-semibold tracking-[-.028em]" style={{ fontFamily: disp }}>
                   What are you studying?

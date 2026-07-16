@@ -1,4 +1,27 @@
 /**
+ * The five administrative regions (kota administrasi) of DKI Jakarta.
+ *
+ * Zone pickers are limited to these. Filtering by province alone isn't enough —
+ * "RW 02 Jagakarsa" is also DKI Jakarta but is a sub-district, not a region, and
+ * "Depok" is West Java entirely. Both stay in the zones table (seeded events
+ * reference Depok) but are never offered.
+ */
+export const JAKARTA_REGIONS = [
+  "Jakarta Pusat",
+  "Jakarta Utara",
+  "Jakarta Barat",
+  "Jakarta Selatan",
+  "Jakarta Timur",
+] as const;
+
+/** Keeps a zone list to the five regions, in the canonical order above. */
+export function toJakartaRegions<T extends { name: string }>(zones: T[]): T[] {
+  return JAKARTA_REGIONS.map((region) => zones.find((z) => z.name === region)).filter(
+    (z): z is T => Boolean(z)
+  );
+}
+
+/**
  * Options offered during profile building.
  *
  * INTEREST_OPTIONS are not cosmetic: the matcher scores a volunteer's
