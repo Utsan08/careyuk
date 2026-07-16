@@ -1,0 +1,67 @@
+@keyframes backdropIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes cardIn {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes blobMove {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(20px, -24px) scale(1.15);
+  }
+}
+
+.backdrop {
+  background: rgba(16, 38, 24, 0.55);
+  backdrop-filter: blur(6px);
+  animation: backdropIn 0.25s ease both;
+}
+
+.card {
+  animation: cardIn 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.fadeIn {
+  animation: fadeIn 0.28s ease both;
+}
+
+.blob {
+  animation: blobMove 18s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop,
+  .card,
+  .fadeIn,
+  .blob {
+    animation: none;
+  }
+}

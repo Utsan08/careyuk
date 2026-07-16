@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createRouteClient } from "@/lib/supabase/route";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { roleToDb, type ContractRole } from "@/lib/role";
+import { insertRoleRow } from "@/lib/insert-role-row";
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
@@ -10,7 +11,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const { email, password, full_name, role, faculty, interests, bio } = body as {
+  const { email, password, full_name, role, faculty, interests, bio, zone_id } = body as {
     email?: string;
     password?: string;
     full_name?: string;
@@ -18,6 +19,8 @@ export async function POST(request: NextRequest) {
     faculty?: string;
     interests?: string[];
     bio?: string;
+    /** Home zone. The matcher falls back to a flat 0.5 proximity score without it. */
+    zone_id?: string;
   };
 
   if (!email || !password || !full_name || (role !== "volunteer" && role !== "org")) {
@@ -56,24 +59,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: profileError.message }, { status: 500 });
   }
 
-  const roleTableInsert =
-    role === "volunteer"
-      ? admin.from("student").insert({
-          user_id: userId,
-          display_name: full_name,
-          email,
-          faculty: faculty ?? null,
-          interest: interests ?? null,
-          bio: bio ?? null,
-        })
-      : admin.from("organization").insert({
-          user_id: userId,
-          display_name: full_name,
-          email,
-          bio: bio ?? null,
-        });
-
-  const { error: roleError } = await roleTableInsert;
+  const { error: roleError } = await insertRoleRow(admin, {
+    userId,
+    role,
+    full_name,
+    email,
+    faculty,
+    interests,
+    bio,
+    zone_id,
+  });
 
   if (roleError) {
     await admin.from("user_auth").delete().eq("user_id", userId);

@@ -87,6 +87,33 @@
   }
 }
 
+@keyframes barGrow {
+  0% {
+    width: 0;
+  }
+}
+
+@keyframes dropIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes rowOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+}
+
 .shell {
   animation: fadeIn 0.5s ease both;
 }
@@ -127,6 +154,43 @@
   animation: scanline 2.2s ease-in-out infinite alternate;
 }
 
+.barGrow {
+  animation: barGrow 1s ease both;
+}
+
+.dropIn {
+  animation: dropIn 0.18s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  transform-origin: top right;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  60% {
+    transform: scale(1.06);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+
+.popIn {
+  animation: popIn 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
 /* Reward preview rides alongside the form, then drops below it on narrow screens. */
 .postGrid {
   display: grid;
@@ -160,7 +224,10 @@
   .shine,
   .floaty,
   .pulseDot,
-  .scanline {
+  .scanline,
+  .barGrow,
+  .dropIn,
+  .popIn {
     animation: none;
   }
 }

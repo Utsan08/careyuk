@@ -1,10 +1,11 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { useDemoApplications, type AppStatus } from "@/lib/demoStore";
+import { WelcomeTour } from "@/components/volunteer/welcome-tour";
 
 function statusMeta(st?: AppStatus) {
   if (st === "accepted") return { t: "ACCEPTED", bg: "#E6F4E6", c: "#2C7A43" };
@@ -40,7 +41,7 @@ const OPPS: Opp[] = [
   { id: 5, title: "Community Nutrition Screening", org: "Depok Community Clinic", typeKey: "clinic", zone: "Depok", distance: 6.0, when: "Wed 23 Jul", soon: 7, hours: 5, slots: "4 of 8 slots", match: 74, priority: false, emoji: "🥗", lat: -6.3835, lng: 106.8221, reason: "Nutrition screening near Depok — matches your nutrition interest.", avatar: "#D8F0C4", pinBg: "#8FD14F", tag: "CLINIC HELP", tagBg: "#EAF7E3", tagColor: "#3DA35D" },
 ];
 
-const disp = "var(--font-display,'Bricolage Grotesque',sans-serif)";
+const disp = "var(--font-display,'Geist','Inter',sans-serif)";
 const CIRC = 2 * Math.PI * 27;
 const TYPE_CHIPS = [{ key: "all", label: "All" }, { key: "event", label: "Events" }, { key: "clinic", label: "Clinic" }, { key: "shadow", label: "Shadowing" }] as const;
 const SORT_CHIPS = [{ key: "match", label: "Best match" }, { key: "near", label: "Nearest" }, { key: "soon", label: "Soonest" }] as const;
@@ -248,6 +249,11 @@ export default function VolunteerExplorePage() {
 
   return (
     <div className="min-h-screen w-full" style={{ background: "radial-gradient(900px 500px at 15% 0%,#EAF7E3,transparent 60%),#E7EDE6" }}>
+      {/* First-run walkthrough — shows on ?tour=1 after signup, once per browser. */}
+      <Suspense fallback={null}>
+        <WelcomeTour />
+      </Suspense>
+
       {/* clip path for the organic sidebar edge (scales to element) */}
       <svg width="0" height="0" className="absolute" aria-hidden>
         <defs>
