@@ -1,10 +1,11 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { useDemoApplications, type AppStatus } from "@/lib/demoStore";
+import { WelcomeTour } from "@/components/volunteer/welcome-tour";
 
 function statusMeta(st?: AppStatus) {
   if (st === "accepted") return { t: "ACCEPTED", bg: "#E6F4E6", c: "#2C7A43" };
@@ -248,6 +249,11 @@ export default function VolunteerExplorePage() {
 
   return (
     <div className="min-h-screen w-full" style={{ background: "radial-gradient(900px 500px at 15% 0%,#EAF7E3,transparent 60%),#E7EDE6" }}>
+      {/* First-run walkthrough — shows on ?tour=1 after signup, once per browser. */}
+      <Suspense fallback={null}>
+        <WelcomeTour />
+      </Suspense>
+
       {/* clip path for the organic sidebar edge (scales to element) */}
       <svg width="0" height="0" className="absolute" aria-hidden>
         <defs>

@@ -1,0 +1,45 @@
+@keyframes stepIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes blobMove {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(24px, -30px) scale(1.15);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.stepIn {
+  animation: stepIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.blob {
+  animation: blobMove 24s ease-in-out infinite;
+}
+
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stepIn,
+  .blob {
+    animation: none;
+  }
+}

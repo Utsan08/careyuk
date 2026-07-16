@@ -5,6 +5,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
+import { createClient, isProviderEnabled } from "@/lib/supabase/client";
+
 /**
  * CareYuk — Login  ·  app/login/page.tsx
  * Owns role → route handoff: volunteer → /volunteer/explore, org → /org
@@ -62,6 +64,10 @@ export default function LoginPage() {
   const router = useRouter();
   const [role, setRole] = useState<Role>("volunteer");
   const [showPw, setShowPw] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const isVol = role === "volunteer";
   const count = useCountUp(12480);
   const typed = useTypewriter();
@@ -71,11 +77,62 @@ export default function LoginPage() {
     : "linear-gradient(120deg,#3DA35D 0%,#2c6e42 55%,#23472D 100%)";
   const accentShadow = isVol ? "0 10px 26px rgba(143,209,79,.4)" : "0 10px 26px rgba(35,71,45,.35)";
 
-  const onSubmit = (e: React.FormEvent) => {
+  /**
+   * Real sign-in. The role toggle only picks which dashboard we'd prefer — the
+   * profile returned by the API is what actually decides, so signing in with an
+   * org account while the toggle says "volunteer" still lands on /org.
+   */
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Auth is not wired yet — for now the role toggle just routes to the
-    // matching dashboard: volunteer → /volunteer/explore, org → /org.
-    router.push(isVol ? "/volunteer/explore" : "/org");
+    setError(null);
+
+    if (!email.trim() || !password) {
+      setError("Enter your email and password.");
+      return;
+    }
+
+    setBusy(true);
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email.trim(), password }),
+    }).catch(() => null);
+    setBusy(false);
+
+    if (!res || !res.ok) {
+      const data = res ? await res.json().catch(() => ({})) : {};
+      setError(
+        res?.status === 404
+          ? "That account has no profile yet — finish signing up first."
+          : (data.error ?? "Couldn't sign in. Check your email and password.")
+      );
+      return;
+    }
+
+    const profile = await res.json();
+    router.push(profile.role === "org" ? "/org" : "/volunteer/explore");
+  };
+
+  const onGoogle = async () => {
+    setError(null);
+    setBusy(true);
+
+    // Check first — signInWithOAuth would redirect to a raw JSON error page.
+    if (!(await isProviderEnabled("google"))) {
+      setBusy(false);
+      setError("Google sign-in isn't switched on for this project yet. Use your email, or create an account below.");
+      return;
+    }
+
+    const supabase = createClient();
+    const { error: err } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
+    if (err) {
+      setBusy(false);
+      setError(err.message);
+    }
   };
 
   const chips = [
@@ -176,7 +233,7 @@ export default function LoginPage() {
             <label className="mb-[7px] block text-[12.5px] font-semibold text-[#3f4a43]">Email</label>
             <div className="relative mb-[18px]">
               <span className="absolute left-[15px] top-1/2 -translate-y-1/2 text-base opacity-50">✉️</span>
-              <input type="email" placeholder="you@example.com"
+              <input type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email"
                 className="w-full rounded-[14px] border-[1.5px] border-[#E2E8DE] bg-white py-[14px] pl-[44px] pr-4 text-[15px] outline-none transition focus:border-[#8FD14F] focus:shadow-[0_0_0_4px_rgba(143,209,79,.18)]" />
             </div>
 
@@ -186,7 +243,7 @@ export default function LoginPage() {
             </div>
             <div className="relative mb-[18px]">
               <span className="absolute left-[15px] top-1/2 -translate-y-1/2 text-base opacity-50">🔒</span>
-              <input type={showPw ? "text" : "password"} placeholder="••••••••"
+              <input type={showPw ? "text" : "password"} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password"
                 className="w-full rounded-[14px] border-[1.5px] border-[#E2E8DE] bg-white py-[14px] pl-[44px] pr-[46px] text-[15px] outline-none transition focus:border-[#8FD14F] focus:shadow-[0_0_0_4px_rgba(143,209,79,.18)]" />
               <button type="button" onClick={() => setShowPw((s) => !s)} aria-label="Show password" className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-2 text-base opacity-55">
                 {showPw ? "🙈" : "👁️"}
@@ -197,12 +254,18 @@ export default function LoginPage() {
               <input type="checkbox" className="h-[18px] w-[18px] cursor-pointer accent-[#3DA35D]" /> Keep me signed in
             </label>
 
-            <button type="submit"
-              className="relative flex w-full items-center justify-center gap-[9px] overflow-hidden rounded-[14px] py-[15px] text-[15.5px] font-bold text-white transition-transform duration-200 hover:-translate-y-0.5 active:translate-y-0"
+            {error && (
+              <div className="mb-[14px] rounded-[12px] border border-[#EF5A5A]/30 bg-[#FDECEC] px-3.5 py-2.5 text-[12.5px] font-medium text-[#D2453F]">
+                {error}
+              </div>
+            )}
+
+            <button type="submit" disabled={busy}
+              className="relative flex w-full items-center justify-center gap-[9px] overflow-hidden rounded-[14px] py-[15px] text-[15.5px] font-bold text-white transition-transform duration-200 hover:-translate-y-0.5 active:translate-y-0 disabled:cursor-wait disabled:opacity-70 disabled:hover:translate-y-0"
               style={{ background: accent, boxShadow: accentShadow }}>
               <span className="absolute left-0 top-0 h-full w-[45%]" style={{ background: "linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent)", animation: "shine 3.6s ease-in-out infinite" }} />
-              <span className="relative">{isVol ? "Sign in as Volunteer" : "Sign in as Organization"}</span>
-              <span className="relative text-[17px]">→</span>
+              <span className="relative">{busy ? "Signing in…" : isVol ? "Sign in as Volunteer" : "Sign in as Organization"}</span>
+              {!busy && <span className="relative text-[17px]">→</span>}
             </button>
           </form>
 
@@ -210,7 +273,7 @@ export default function LoginPage() {
             <span className="h-px flex-1 bg-[#E2E8DE]" /><span className="text-xs font-medium text-[#9aa39c]">or continue with</span><span className="h-px flex-1 bg-[#E2E8DE]" />
           </div>
 
-          <button type="button" className="flex w-full items-center justify-center gap-[10px] rounded-[14px] border-[1.5px] border-[#E2E8DE] bg-white py-[13px] text-[14.5px] font-semibold text-[#202320] transition hover:-translate-y-px hover:border-[#8FD14F] hover:bg-[#F8FBF4]">
+          <button type="button" onClick={onGoogle} className="flex w-full cursor-pointer items-center justify-center gap-[10px] rounded-[14px] border-[1.5px] border-[#E2E8DE] bg-white py-[13px] text-[14.5px] font-semibold text-[#202320] transition hover:-translate-y-px hover:border-[#8FD14F] hover:bg-[#F8FBF4] active:translate-y-0">
             <GoogleIcon /> Sign in with Google
           </button>
 

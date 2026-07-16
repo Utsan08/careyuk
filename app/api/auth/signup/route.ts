@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const { email, password, full_name, role, faculty, interests, bio } = body as {
+  const { email, password, full_name, role, faculty, interests, bio, zone_id } = body as {
     email?: string;
     password?: string;
     full_name?: string;
@@ -18,6 +18,8 @@ export async function POST(request: NextRequest) {
     faculty?: string;
     interests?: string[];
     bio?: string;
+    /** Home zone. The matcher falls back to a flat 0.5 proximity score without it. */
+    zone_id?: string;
   };
 
   if (!email || !password || !full_name || (role !== "volunteer" && role !== "org")) {
@@ -65,6 +67,7 @@ export async function POST(request: NextRequest) {
           faculty: faculty ?? null,
           interest: interests ?? null,
           bio: bio ?? null,
+          zone_id: zone_id ?? null,
         })
       : admin.from("organization").insert({
           user_id: userId,
