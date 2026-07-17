@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 /**
  * Tiny client-only store that lets the volunteer and org pages share one
  * application for the demo. State lives in localStorage so it survives reloads
- * and syncs across tabs (open /volunteer/explore in one tab, /org in another).
+ * and syncs across tabs (open /volunteer in one tab, /org in another).
  *
  * The wired application is Rina → opportunity #1 ("Maternal & Child Health
  * Drive"), which is org applicant id 1. Swap this for real API calls later:

@@ -10,6 +10,7 @@ export type RoleRowInput = {
   interests?: string[];
   bio?: string;
   zone_id?: string;
+  education_level?: string;
 };
 
 /**
@@ -24,10 +25,10 @@ export type RoleRowInput = {
  */
 export async function insertRoleRow(
   admin: SupabaseClient,
-  { userId, role, full_name, email, faculty, interests, bio, zone_id }: RoleRowInput
+  { userId, role, full_name, email, faculty, interests, bio, zone_id, education_level }: RoleRowInput
 ): Promise<{ error: { message: string } | null }> {
   if (role === "volunteer") {
-    return admin.from("student").insert({
+    const base = {
       user_id: userId,
       display_name: full_name,
       email,
@@ -35,7 +36,17 @@ export async function insertRoleRow(
       interest: interests ?? null,
       bio: bio ?? null,
       zone_id: zone_id ?? null,
-    });
+    };
+
+    // student.education_level is pending a migration (see
+    // supabase/migrations/0001_add_education_level.sql). Try with it and retry
+    // without if the column isn't there yet, so signup never breaks.
+    const withLevel = await admin.from("student").insert({ ...base, education_level: education_level ?? null });
+    if (!withLevel.error) return withLevel;
+    if (/education_level/i.test(withLevel.error.message)) {
+      return admin.from("student").insert(base);
+    }
+    return withLevel;
   }
 
   const base = { user_id: userId, display_name: full_name, email, bio: bio ?? null };

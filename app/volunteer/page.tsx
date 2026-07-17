@@ -2,9 +2,15 @@
 
 import { Fragment, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { useDemoApplications, type AppStatus } from "@/lib/demoStore";
+import { useCheckins } from "@/lib/checkin";
+import { useDemoProfile } from "@/lib/demoProfile";
+import { ProfileCard } from "@/components/volunteer/profile-card";
+import { CheckinScanner } from "@/components/volunteer/checkin-scanner";
+import { PortfolioTimeline } from "@/components/volunteer/portfolio-timeline";
 import { WelcomeTour } from "@/components/volunteer/welcome-tour";
 
 function statusMeta(st?: AppStatus) {
@@ -14,7 +20,7 @@ function statusMeta(st?: AppStatus) {
 }
 
 /**
- * CareYuk — Volunteer Explore  ·  app/volunteer/explore/page.tsx
+ * CareYuk — Volunteer Explore  ·  app/volunteer/page.tsx
  *
  * Real map: Leaflet + CARTO Positron (light_all) tiles — clean light basemap, no API key.
  *   npm i leaflet   (types: npm i -D @types/leaflet)
@@ -85,6 +91,12 @@ function pinHtml(o: Opp, sel: boolean) {
 export default function VolunteerExplorePage() {
   const router = useRouter();
   const { apps, apply, withdraw } = useDemoApplications();
+  const { verifiedHours: checkedInHours } = useCheckins();
+  const { profile: demoProfile } = useDemoProfile();
+  const displayName = demoProfile?.full_name?.trim() || "";
+  const firstName = displayName ? displayName.split(/\s+/)[0] : "there";
+  const avatarInitial = displayName ? displayName.charAt(0).toUpperCase() : "🙂";
+  const [scanOpen, setScanOpen] = useState(false);
   const [selectedId, setSelectedId] = useState(1);
   const [view, setView] = useState<"map" | "list">("map");
   const [openMenu, setOpenMenu] = useState<null | "filter" | "bell" | "gear" | "profile">(null);
@@ -373,6 +385,11 @@ export default function VolunteerExplorePage() {
               </AnimatePresence>
             </div>
 
+            {/* on-site check-in */}
+            <button onClick={() => setScanOpen(true)} className={`flex h-11 shrink-0 items-center gap-2 rounded-[14px] px-[15px] text-[13px] font-bold text-[#23472D] transition-transform active:scale-95 ${glass}`}>
+              <QrIcon /> Check in
+            </button>
+
             {/* settings */}
             <div className="relative shrink-0">
               <button onClick={() => setOpenMenu((m) => (m === "gear" ? null : "gear"))} className={`cy-menu-trigger flex h-11 w-11 items-center justify-center rounded-[14px] text-[#23472D] transition-transform active:scale-95 ${glass}`}><GearIcon /></button>
@@ -389,13 +406,13 @@ export default function VolunteerExplorePage() {
 
             {/* profile */}
             <div className="relative shrink-0">
-              <button onClick={() => setOpenMenu((m) => (m === "profile" ? null : "profile"))} className="cy-menu-trigger flex h-11 w-11 items-center justify-center rounded-full border-2 border-white/50 text-[15px] font-extrabold text-white shadow-[0_3px_10px_-3px_rgba(0,0,0,.4)] transition-transform active:scale-95" style={{ background: "linear-gradient(135deg,#8FD14F,#3DA35D)" }}>R</button>
+              <button onClick={() => setOpenMenu((m) => (m === "profile" ? null : "profile"))} className="cy-menu-trigger flex h-11 w-11 items-center justify-center rounded-full border-2 border-white/50 text-[15px] font-extrabold text-white shadow-[0_3px_10px_-3px_rgba(0,0,0,.4)] transition-transform active:scale-95" style={{ background: "linear-gradient(135deg,#8FD14F,#3DA35D)" }}>{avatarInitial}</button>
               <AnimatePresence>
                 {openMenu === "profile" && (
                   <motion.div {...pop} className="cy-menu absolute right-0 top-[52px] z-[30] w-[212px] origin-top-right rounded-[18px] border border-white/70 bg-white/90 p-2 backdrop-blur-xl" style={{ boxShadow: "0 20px 48px -18px rgba(28,61,39,.5)" }}>
                     <div className="mb-1 flex items-center gap-2.5 px-2 py-1.5">
-                      <span className="flex h-9 w-9 items-center justify-center rounded-full text-[13px] font-extrabold text-white" style={{ background: "linear-gradient(135deg,#8FD14F,#3DA35D)" }}>R</span>
-                      <div><div className="text-[13px] font-bold text-[#23472D]">Rina</div><div className="text-[11px] text-[#69746A]">Volunteer</div></div>
+                      <span className="flex h-9 w-9 items-center justify-center rounded-full text-[13px] font-extrabold text-white" style={{ background: "linear-gradient(135deg,#8FD14F,#3DA35D)" }}>{avatarInitial}</span>
+                      <div><div className="text-[13px] font-bold text-[#23472D]">{displayName || "Your profile"}</div><div className="text-[11px] text-[#69746A]">Volunteer</div></div>
                     </div>
                     <div className="my-1 h-px bg-[#23472D]/10" />
                     <div className="cursor-pointer rounded-xl px-3 py-2 text-[13px] font-semibold text-[#23472D] transition-colors hover:bg-[#EAF7E3]/70" onClick={() => { setOpenMenu(null); setNav("portfolio"); }}>View profile</div>
@@ -475,10 +492,10 @@ export default function VolunteerExplorePage() {
 
           {/* topbar (nav wraps below logo when tight) */}
           <div className="relative z-[2] flex flex-wrap items-center justify-between gap-3" style={{ animation: "fadeUp .5s ease both" }}>
-            <div className="flex items-center gap-[11px]">
+            <Link href="/about" className="flex cursor-pointer items-center gap-[11px]" aria-label="About CareYuk">
               <Image src="/careyuk-logo.png" alt="CareYuk" width={46} height={46} className="object-contain" />
               <span className="text-[22px] font-bold tracking-[-.02em]" style={{ fontFamily: disp }}>CareYuk</span>
-            </div>
+            </Link>
             <nav className="flex shrink-0 gap-[2px] rounded-[11px] border border-white/60 bg-white/50 p-[3px] backdrop-blur">
               {NAVS.map((nv) => (
                 <button key={nv.key} onClick={() => setNav(nv.key)} className="relative rounded-lg px-[10px] py-1.5 text-[11.5px] font-bold transition-colors" style={{ color: nav === nv.key ? "#fff" : "#516155" }}>
@@ -492,7 +509,7 @@ export default function VolunteerExplorePage() {
           {/* greeting */}
           <div className="relative z-[2]">
             <div className="mb-[5px] flex items-center gap-1.5 text-[13px] font-semibold text-[#69746A]" style={{ animation: "greetUp .6s ease both .05s" }}>
-              Good morning, Rina <span className="inline-block origin-[70%_80%]" style={{ animation: "wave 3s ease-in-out infinite .8s" }}>👋</span>
+              Good morning, {firstName} <span className="inline-block origin-[70%_80%]" style={{ animation: "wave 3s ease-in-out infinite .8s" }}>👋</span>
             </div>
             <h1 className="text-[29px] font-bold leading-[1.12] tracking-[-.03em] [text-wrap:balance]"
               style={{ fontFamily: disp, background: "linear-gradient(90deg,#1c3d27 0%,#3DA35D 35%,#8FD14F 55%,#1c3d27 90%)", backgroundSize: "220% 100%", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent", animation: "sheen 7s linear infinite,greetUp .6s ease both .12s" }}>
@@ -669,11 +686,13 @@ export default function VolunteerExplorePage() {
             {nav === "portfolio" && (
               <motion.div key="portfolio" className="relative z-[2] flex flex-col gap-[15px]"
                 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.26, ease: EASE }}>
-                <div className="text-xs font-bold uppercase tracking-[.02em] text-[#69746A]">Care portfolio</div>
+                <div className="text-xs font-bold uppercase tracking-[.02em] text-[#69746A]">Your profile</div>
+                <ProfileCard />
+                <div className="mt-1 text-xs font-bold uppercase tracking-[.02em] text-[#69746A]">Care portfolio</div>
                 <div className="rounded-[22px] border border-white/80 bg-white/[.72] p-5 backdrop-blur" style={{ boxShadow: "0 16px 36px -20px rgba(28,61,39,.5)" }}>
                   <div className="grid grid-cols-3 gap-3 text-center">
                     {[
-                      { n: String(portfolioHours), l: "Verified hours" },
+                      { n: String(portfolioHours + checkedInHours), l: "Verified hours" },
                       { n: String(appliedCount), l: "Applications" },
                       { n: appliedCount >= 3 ? "3" : String(appliedCount), l: "Badges" },
                     ].map((st) => (
@@ -694,12 +713,23 @@ export default function VolunteerExplorePage() {
                     <span key={b} className="rounded-full border border-white/70 bg-white/55 px-3 py-1.5 text-[11.5px] font-bold text-[#3f4a43] backdrop-blur" style={{ opacity: appliedCount > i ? 1 : 0.45 }}>{b}</span>
                   ))}
                 </div>
+
+                <PortfolioTimeline />
               </motion.div>
             )}
           </AnimatePresence>
           </div>
         </div>
       </div>
+
+      {/* mobile-only floating check-in (the top controls are hidden on phones) */}
+      <button onClick={() => setScanOpen(true)} aria-label="Check in"
+        className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full text-white shadow-[0_12px_28px_-8px_rgba(28,61,39,.6)] transition-transform active:scale-95 md:hidden"
+        style={{ background: "linear-gradient(135deg,#8FD14F,#3DA35D)" }}>
+        <QrIcon />
+      </button>
+
+      <CheckinScanner open={scanOpen} onClose={() => setScanOpen(false)} />
 
       <style jsx global>{`
         .leaflet-container{background:#eaeff0;font-family:inherit}
@@ -722,6 +752,14 @@ export default function VolunteerExplorePage() {
           .cySidebar{clip-path:none !important;width:46% !important;border-right:1px solid #dfe8db}
           .cyScroll{padding-right:24px !important}
           .cyRightUI{left:46% !important}
+        }
+        /* phones: the curved sidebar becomes the full-width app; the map/overlays
+           step aside and a floating button carries the on-site QR check-in. */
+        @media (max-width:767px){
+          .board{height:100dvh !important;min-height:100dvh !important}
+          .cySidebar{width:100% !important;clip-path:none !important;direction:ltr !important;border-right:none}
+          .cyScroll{padding-left:18px !important;padding-right:18px !important;direction:ltr !important}
+          .cyRightUI{display:none !important}
         }
       `}</style>
     </div>
@@ -757,5 +795,6 @@ const BellIcon = () => <svg width="19" height="19" viewBox="0 0 24 24" {...s}><p
 const FilterIcon = () => <svg width="17" height="17" viewBox="0 0 24 24" {...s}><path d="M3 5h18M6 12h12M10 19h4" /></svg>;
 const GearIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" {...s}><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>;
 const MapIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" {...s}><path d="M9 3 3 5v16l6-2 6 2 6-2V3l-6 2-6-2zM9 3v16M15 5v16" /></svg>;
+const QrIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" {...s}><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><path d="M14 14h3v3M21 14v.01M14 21h.01M21 17v4" /></svg>;
 const ListIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" {...s}><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" /></svg>;
 const TargetIcon = ({ color }: { color?: string }) => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={color ?? "currentColor"} strokeWidth="2.4"><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="3.5" /></svg>;

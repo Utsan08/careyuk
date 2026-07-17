@@ -232,7 +232,7 @@ export function OrgDashboard() {
   };
 
   return (
-    <div className={`flex h-screen min-h-[700px] overflow-hidden ${styles.shell}`}>
+    <div className={`flex h-screen min-h-[700px] overflow-hidden max-md:h-auto max-md:min-h-screen max-md:flex-col max-md:overflow-visible ${styles.shell}`}>
       <OrgSidebar tab={tab} onTabChange={setTab} pendingCount={pendingCount} orgName={orgName} />
 
       <div ref={mainRef} className="relative flex min-w-0 flex-1 flex-col bg-[#F7FAF5] text-[#202320]">

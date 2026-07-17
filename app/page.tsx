@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
-// The app opens on the login screen; role selection there routes to the
-// volunteer or org dashboard.
+// The app lands on the About page — a cinematic intro (spinning logo) leads into
+// the story; Sign in is one tap away from there.
 export default function Home() {
-  redirect("/login");
+  redirect("/about");
 }

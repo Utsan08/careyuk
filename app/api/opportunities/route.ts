@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createRouteClient } from "@/lib/supabase/route";
 import { buildEventTags, type OpportunityType } from "@/lib/opportunityTags";
 import { mapOrgOpportunityRow, mapFeedOpportunityRow, type EventWithCounts } from "@/lib/opportunities";
+import { llmBlurbEnabled, polishMatchReason } from "@/lib/matchBlurb";
 
 const OPPORTUNITY_SELECT =
   "event_id, event_name, event_date, event_duration, event_tags, event_location, zone_id, organization_id, organization(display_name), zones(zone_name), participants(application_status)";
@@ -47,6 +48,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Volunteer not found" }, { status: 404 });
   }
 
+  // Best-effort read of education_level — the column may not exist yet (pending
+  // migration), in which case level gating just treats everyone as eligible.
+  let educationLevel: string | null = null;
+  const lvl = await admin.from("student").select("education_level").eq("user_id", volunteerId!).maybeSingle();
+  if (!lvl.error && lvl.data) educationLevel = (lvl.data as { education_level: string | null }).education_level;
+
   const { data, error } = await admin.from("events").select(OPPORTUNITY_SELECT);
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -56,7 +63,7 @@ export async function GET(request: NextRequest) {
   const volunteer = {
     id: volunteerId!,
     faculty: student.faculty,
-    educationLevel: null,
+    educationLevel,
     interests: student.interest,
     zoneId: student.zone_id,
   };
@@ -70,6 +77,21 @@ export async function GET(request: NextRequest) {
       return !isPast && filled < total;
     })
     .sort((a, b) => b.match_score - a.match_score);
+
+  // Optional: rewrite the top matches' reasons with an LLM. No-ops (no network)
+  // until ANTHROPIC_API_KEY is set, and each call falls back to its template on
+  // error — so the feed is unchanged today and lights up once a key is provided.
+  if (llmBlurbEnabled()) {
+    await Promise.all(
+      feed.slice(0, 6).map(async (row) => {
+        row.match_reason = await polishMatchReason(
+          { faculty: student.faculty, interests: student.interest },
+          { title: row.title, org: row.org_name, distanceKm: row.distance_km },
+          row.match_reason
+        );
+      })
+    );
+  }
 
   return NextResponse.json(feed);
 }
