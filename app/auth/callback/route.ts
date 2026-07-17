@@ -35,12 +35,18 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const admin = createAdminClient();
-  const profile = await getProfileById(admin, data.user.id);
-
-  if (!profile) {
+  // The session exists at this point. Guard the profile lookup so a backend
+  // hiccup (e.g. a missing SUPABASE_SERVICE_ROLE_KEY) can't 500 the callback and
+  // show the raw "unable to handle this request" page — send them to finish
+  // onboarding, which surfaces a clean, themed error instead.
+  try {
+    const admin = createAdminClient();
+    const profile = await getProfileById(admin, data.user.id);
+    if (!profile) {
+      return NextResponse.redirect(`${origin}/signup?step=profile`);
+    }
+    return NextResponse.redirect(`${origin}${profile.role === "org" ? "/org" : "/volunteer"}`);
+  } catch {
     return NextResponse.redirect(`${origin}/signup?step=profile`);
   }
-
-  return NextResponse.redirect(`${origin}${profile.role === "org" ? "/org" : "/volunteer/explore"}`);
 }

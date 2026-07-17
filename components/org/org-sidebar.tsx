@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { Building2, LineChart, Plus, QrCode, ShieldCheck, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -26,7 +27,7 @@ export function OrgSidebar({
 }) {
   return (
     <div
-      className="relative flex w-[264px] shrink-0 flex-col overflow-hidden border-r border-[#EAF7E3]/10 px-5 py-6 text-[#EAF7E3]"
+      className="relative flex w-[264px] shrink-0 flex-col overflow-hidden border-r border-[#EAF7E3]/10 px-5 py-6 text-[#EAF7E3] max-md:w-full max-md:flex-row max-md:items-center max-md:gap-3 max-md:overflow-x-auto max-md:border-b max-md:border-r-0 max-md:px-3 max-md:py-2.5"
       style={{ background: "linear-gradient(180deg,#2c5e3c 0%,#245030 60%,#1e4429 100%)" }}
     >
       <div
@@ -34,24 +35,26 @@ export function OrgSidebar({
         style={{ background: "radial-gradient(circle,#8FD14F,transparent 70%)" }}
       />
 
-      <div className={`relative mb-[26px] flex items-center gap-[10px] ${styles.fadeUp}`}>
-        <Image
-          src="/careyuk-logo.png"
-          alt=""
-          width={30}
-          height={30}
-          className="object-contain [filter:brightness(1.4)]"
-        />
-        <span className="text-[18px] font-semibold text-[#F8F9F7]" style={{ fontFamily: displayFont }}>
-          CareYuk
-        </span>
+      <div className={`relative mb-[26px] flex items-center gap-[10px] max-md:mb-0 max-md:shrink-0 ${styles.fadeUp}`}>
+        <Link href="/about" className="flex items-center gap-[10px]" aria-label="About CareYuk">
+          <Image
+            src="/careyuk-logo.png"
+            alt=""
+            width={30}
+            height={30}
+            className="object-contain [filter:brightness(1.4)]"
+          />
+          <span className="text-[18px] font-semibold text-[#F8F9F7]" style={{ fontFamily: displayFont }}>
+            CareYuk
+          </span>
+        </Link>
         <span className="ml-auto rounded-md border border-[#EAF7E3]/20 px-[7px] py-[3px] text-[9.5px] font-semibold tracking-[.08em] text-[#EAF7E3]/40">
           ORG
         </span>
       </div>
 
       <div
-        className={`relative mb-6 rounded-[18px] border border-[#EAF7E3]/[.12] bg-[#EAF7E3]/[.08] p-4 ${styles.fadeUpDelayed}`}
+        className={`relative mb-6 rounded-[18px] border border-[#EAF7E3]/[.12] bg-[#EAF7E3]/[.08] p-4 max-md:hidden ${styles.fadeUpDelayed}`}
       >
         <div className="flex items-center gap-3">
           <div
@@ -71,8 +74,8 @@ export function OrgSidebar({
         </div>
       </div>
 
-      <div className="mx-1.5 mb-2.5 text-[10.5px] font-semibold tracking-[.09em] text-[#EAF7E3]/40">MANAGE</div>
-      <nav className="flex flex-col gap-[5px]">
+      <div className="mx-1.5 mb-2.5 text-[10.5px] font-semibold tracking-[.09em] text-[#EAF7E3]/40 max-md:hidden">MANAGE</div>
+      <nav className="flex flex-col gap-[5px] max-md:flex-row max-md:gap-1.5 max-md:overflow-x-auto">
         {TABS.map((t) => {
           const active = tab === t.key;
           const badge = t.key === "appl" ? pendingCount : 0;
@@ -83,7 +86,7 @@ export function OrgSidebar({
               type="button"
               onClick={() => onTabChange(t.key)}
               aria-current={active ? "page" : undefined}
-              className="flex cursor-pointer items-center gap-3 rounded-[13px] px-[14px] py-3 text-left text-[13.5px] font-semibold transition-colors"
+              className="flex cursor-pointer items-center gap-3 rounded-[13px] px-[14px] py-3 text-left text-[13.5px] font-semibold transition-colors max-md:shrink-0 max-md:gap-2 max-md:px-3 max-md:py-2 max-md:whitespace-nowrap"
               style={{
                 background: active ? "rgba(143,209,79,.9)" : "transparent",
                 color: active ? "#123" : "rgba(234,247,227,.72)",
@@ -107,7 +110,7 @@ export function OrgSidebar({
         })}
       </nav>
 
-      <div className="relative mt-auto flex flex-col gap-2.5">
+      <div className="relative mt-auto flex flex-col gap-2.5 max-md:hidden">
         {SIDEBAR_STATS.map((s) => (
           <div key={s.label} className="rounded-2xl border border-[#EAF7E3]/10 bg-[#EAF7E3]/[.06] px-[15px] py-[14px]">
             <div className="mb-1 text-[11px] font-medium text-[#EAF7E3]/55">{s.label}</div>

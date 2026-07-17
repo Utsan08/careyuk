@@ -3,10 +3,12 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import { ArrowLeft, ArrowRight, Check, Loader2, MapPin, Sparkles } from "lucide-react";
 
 import { createClient, isProviderEnabled } from "@/lib/supabase/client";
-import { FACULTY_LABELS, FACULTY_OPTIONS, INTEREST_OPTIONS, toJakartaRegions } from "@/lib/profile-options";
+import { EDUCATION_OPTIONS, FACULTY_LABELS, FACULTY_OPTIONS, INTEREST_OPTIONS, JAKARTA_REGIONS, toJakartaRegions } from "@/lib/profile-options";
+import { saveDemoProfile } from "@/lib/demoProfile";
 import styles from "./signup.module.css";
 
 const disp = "var(--font-display,'Geist','Inter',sans-serif)";
@@ -42,6 +44,7 @@ function SignupFlow() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [faculty, setFaculty] = useState<string>("");
+  const [educationLevel, setEducationLevel] = useState<string>("");
   const [interests, setInterests] = useState<string[]>([]);
   const [zoneId, setZoneId] = useState<string>("");
   const [bio, setBio] = useState("");
@@ -51,14 +54,19 @@ function SignupFlow() {
 
   const steps = role === "org" ? ORG_STEPS : VOLUNTEER_STEPS;
 
+  // The 5 Jakarta regions always render. If the zones API can't serve real rows
+  // (e.g. the backend service key isn't set yet), fall back to placeholder region
+  // options so signup is never blocked — placeholder ids are stripped on save.
+  const FALLBACK_ZONES: Zone[] = JAKARTA_REGIONS.map((name) => ({ id: `fallback:${name}`, name }));
+
   useEffect(() => {
     fetch("/api/zones")
       .then((r) => (r.ok ? r.json() : []))
       .then((z) => {
-        if (!Array.isArray(z)) return;
-        setZones(toJakartaRegions(z.map((x: { id: string; name: string }) => ({ id: x.id, name: x.name }))));
+        const real = Array.isArray(z) ? toJakartaRegions(z.map((x: { id: string; name: string }) => ({ id: x.id, name: x.name }))) : [];
+        setZones(real.length ? real : FALLBACK_ZONES);
       })
-      .catch(() => {});
+      .catch(() => setZones(FALLBACK_ZONES));
   }, []);
 
   // Prefill the name Google gave us.
@@ -69,7 +77,7 @@ function SignupFlow() {
       .then((d) => {
         if (d?.email) setEmail(d.email);
         if (d && !d.needsOnboarding && d.profile) {
-          router.replace(d.profile.role === "org" ? "/org" : "/volunteer/explore");
+          router.replace(d.profile.role === "org" ? "/org" : "/volunteer");
         }
       })
       .catch(() => {});
@@ -81,7 +89,7 @@ function SignupFlow() {
   const canAdvance = () => {
     if (step === 0) return fullName.trim() && email.trim() && password.length >= 6;
     if (role === "org") return !!zoneId; // org step 1: region is the only required field
-    if (step === 1) return !!faculty;
+    if (step === 1) return !!faculty && !!educationLevel;
     if (step === 2) return interests.length > 0;
     if (step === 3) return !!zoneId;
     return false;
@@ -95,27 +103,50 @@ function SignupFlow() {
       full_name: fullName.trim(),
       role,
       faculty: role === "volunteer" ? faculty || undefined : undefined,
+      education_level: role === "volunteer" ? educationLevel || undefined : undefined,
       interests: role === "volunteer" ? interests : undefined,
-      zone_id: zoneId || undefined,
+      zone_id: zoneId && !zoneId.startsWith("fallback:") ? zoneId : undefined,
       bio: bio.trim() || undefined,
     };
 
+    // Remember who they are for the dashboard greeting + profile card, so the
+    // demo works with or without a live session.
+    saveDemoProfile({
+      full_name: fullName.trim(),
+      role,
+      faculty: (role === "volunteer" && faculty) || null,
+      education_level: (role === "volunteer" && educationLevel) || null,
+      interests: role === "volunteer" ? interests : [],
+      avatar_url: null,
+    });
+
+    const toDashboard = () => router.push(role === "org" ? "/org" : "/volunteer?tour=1");
+
     // OAuth users already have a session — they only need the profile rows.
-    const res = oauthMode
-      ? await fetch("/api/profile/complete", {
+    const res = await (oauthMode
+      ? fetch("/api/profile/complete", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         })
-      : await fetch("/api/auth/signup", {
+      : fetch("/api/auth/signup", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ...body, email: email.trim(), password }),
-        });
+        })
+    ).catch(() => null);
 
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      setError(data.error ?? "Could not create your account.");
+    if (!res || !res.ok) {
+      const data = res ? await res.json().catch(() => ({})) : {};
+      const msg: string = data.error ?? "";
+      // When the backend itself isn't reachable/configured (empty Supabase keys,
+      // missing tables), don't dead-end the demo — carry on into the dashboard.
+      const backendDown = !res || res.status >= 500 || /supabase|service|key|PGRST|relation|schema|column|fetch failed/i.test(msg);
+      if (backendDown) {
+        toDashboard();
+        return;
+      }
+      setError(msg || "Could not create your account.");
       setBusy(false);
       return;
     }
@@ -129,7 +160,7 @@ function SignupFlow() {
       }).catch(() => {});
     }
 
-    router.push(role === "org" ? "/org" : "/volunteer/explore?tour=1");
+    toDashboard();
   };
 
   const google = async () => {
@@ -164,10 +195,10 @@ function SignupFlow() {
         style={{ background: "linear-gradient(180deg,#2c5e3c 0%,#245030 60%,#1e4429 100%)" }}
       >
         <div className={`pointer-events-none absolute -top-16 -right-20 h-[320px] w-[320px] rounded-full opacity-25 blur-[24px] ${styles.blob}`} style={{ background: "radial-gradient(circle,#8FD14F,transparent 70%)" }} />
-        <div className="relative flex items-center gap-2.5">
+        <Link href="/about" className="relative flex items-center gap-2.5" aria-label="About CareYuk">
           <Image src="/careyuk-logo.png" alt="" width={30} height={30} className="object-contain [filter:brightness(1.4)]" />
           <span className="text-[18px] font-semibold text-[#F8F9F7]" style={{ fontFamily: disp }}>CareYuk</span>
-        </div>
+        </Link>
         <div className="relative">
           <h2 className="text-[32px] leading-[1.15] font-semibold tracking-[-.03em] text-white" style={{ fontFamily: disp }}>
             Every hour you give
@@ -322,6 +353,33 @@ function SignupFlow() {
                         style={{ borderColor: on ? "#8FD14F" : "#E2E8DE", background: on ? "#EAF7E3" : "#fff", color: on ? "#23472D" : "#516155" }}
                       >
                         {FACULTY_LABELS[f]}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <h2 className="mt-7 text-[15px] font-semibold tracking-[-.01em] text-[#23472D]" style={{ fontFamily: disp }}>
+                  Where are you in your studies?
+                </h2>
+                <p className="mt-1 mb-3 text-[13px] font-medium text-[#8a938b]">
+                  This decides which roles you can take — some clinics need med students.
+                </p>
+                <div className="grid grid-cols-2 gap-2.5">
+                  {EDUCATION_OPTIONS.map((o) => {
+                    const on = educationLevel === o.value;
+                    return (
+                      <button
+                        key={o.value}
+                        type="button"
+                        onClick={() => setEducationLevel(o.value)}
+                        className="flex cursor-pointer items-start gap-2.5 rounded-[14px] border-[1.5px] p-3 text-left transition-all active:scale-[.98]"
+                        style={{ borderColor: on ? "#8FD14F" : "#E2E8DE", background: on ? "#EAF7E3" : "#fff", boxShadow: on ? "0 8px 20px -12px rgba(143,209,79,.7)" : "none" }}
+                      >
+                        <span className="text-[20px] leading-none">{o.icon}</span>
+                        <span className="min-w-0">
+                          <span className="block text-[13.5px] font-semibold" style={{ color: on ? "#23472D" : "#3f4a43" }}>{o.label}</span>
+                          <span className="block text-[11.5px] leading-[1.35] text-[#8a938b]">{o.blurb}</span>
+                        </span>
                       </button>
                     );
                   })}

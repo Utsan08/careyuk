@@ -48,6 +48,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Volunteer not found" }, { status: 404 });
   }
 
+  // Best-effort read of education_level — the column may not exist yet (pending
+  // migration), in which case level gating just treats everyone as eligible.
+  let educationLevel: string | null = null;
+  const lvl = await admin.from("student").select("education_level").eq("user_id", volunteerId!).maybeSingle();
+  if (!lvl.error && lvl.data) educationLevel = (lvl.data as { education_level: string | null }).education_level;
+
   const { data, error } = await admin.from("events").select(OPPORTUNITY_SELECT);
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -57,7 +63,7 @@ export async function GET(request: NextRequest) {
   const volunteer = {
     id: volunteerId!,
     faculty: student.faculty,
-    educationLevel: null,
+    educationLevel,
     interests: student.interest,
     zoneId: student.zone_id,
   };

@@ -1,6 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import QRCode from "qrcode";
 
-import { CHECKIN_CODE, displayFont, initials, qrCells, type VerifiedVolunteer } from "./data";
+import { CHECKIN_PREFIX } from "@/lib/checkin";
+import { CHECKIN_CODE, displayFont, initials, type VerifiedVolunteer } from "./data";
 import styles from "./org-dashboard.module.css";
 
 const cardClass = "rounded-[22px] border border-[#E9EFE6] bg-white p-6 shadow-[0_10px_30px_-22px_rgba(28,61,39,.4)]";
@@ -19,7 +21,14 @@ export function CheckinTab({
   totalSlots: number;
   search: string;
 }) {
-  const cells = useMemo(() => qrCells(), []);
+  // Real, scannable QR encoding the on-site check-in payload — a volunteer's
+  // scanner (components/volunteer/checkin-scanner.tsx) reads this and checks in.
+  const [qrUrl, setQrUrl] = useState<string>("");
+  useEffect(() => {
+    QRCode.toDataURL(`${CHECKIN_PREFIX}${CHECKIN_CODE}`, { margin: 1, width: 360, color: { dark: "#16311f", light: "#ffffff" } })
+      .then(setQrUrl)
+      .catch(() => {});
+  }, []);
   const [code, setCode] = useState(CHECKIN_CODE);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,7 +50,7 @@ export function CheckinTab({
   };
 
   return (
-    <div className={`grid gap-[22px] [grid-template-columns:360px_1fr] ${styles.tabIn}`}>
+    <div className={`grid gap-[22px] [grid-template-columns:360px_1fr] max-md:grid-cols-1 ${styles.tabIn}`}>
       <div className={`${cardClass} self-start text-center`}>
         <div className="mb-1 text-[12px] font-semibold text-[#3f4a43]">Scan to verify on-site</div>
         <div className="mb-[18px] text-[11.5px] text-[#69746A]">Maternal &amp; Child Health Drive</div>
@@ -52,11 +61,8 @@ export function CheckinTab({
               style={{ background: "linear-gradient(90deg,transparent,#8FD14F,transparent)" }}
             />
           )}
-          <svg viewBox="0 0 21 21" width="100%" height="100%" shapeRendering="crispEdges" aria-hidden="true">
-            {cells.map((c) => (
-              <rect key={`${c.x}-${c.y}`} x={c.x} y={c.y} width="1" height="1" rx="0.15" fill="#16311f" />
-            ))}
-          </svg>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {qrUrl && <img src={qrUrl} alt="Check-in QR code" width="100%" height="100%" className="h-full w-full object-contain" />}
         </div>
         <div className="mt-4 text-[11px] text-[#69746A]">Or enter code manually</div>
         <div className="mt-2 flex gap-2">

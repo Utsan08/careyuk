@@ -9,7 +9,7 @@ import styles from "./welcome-tour.module.css";
 const disp = "var(--font-display,'Geist','Inter',sans-serif)";
 
 /**
- * First-run walkthrough of the volunteer features. Shown when /volunteer/explore
+ * First-run walkthrough of the volunteer features. Shown when /volunteer
  * is opened with ?tour=1 (the signup flow sends new users here) and not shown
  * again once dismissed.
  *
@@ -91,7 +91,7 @@ export function WelcomeTour() {
     } catch {
       // private mode — the tour just shows again next time
     }
-    router.replace("/volunteer/explore");
+    router.replace("/volunteer");
   };
 
   if (!open) return null;

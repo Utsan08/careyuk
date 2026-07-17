@@ -60,6 +60,20 @@ export const FACULTY_OPTIONS = [
   "exploring",
 ];
 
+/**
+ * Education level gates which roles a volunteer sees (lib/matching.ts →
+ * passesLevelGate): an event wanting med_student won't show to a high schooler.
+ * Values must match EducationLevel in lib/matching.ts. Persisted on
+ * student.education_level — run supabase/migrations/0001_add_education_level.sql
+ * to add the column (until then it degrades gracefully and saves nothing).
+ */
+export const EDUCATION_OPTIONS: { value: string; label: string; blurb: string; icon: string }[] = [
+  { value: "highschool", label: "High schooler", blurb: "Exploring healthcare, open to community roles", icon: "🎒" },
+  { value: "undergrad", label: "Undergraduate", blurb: "University student building hands-on hours", icon: "🎓" },
+  { value: "med_student", label: "Med student", blurb: "Eligible for clinical shadowing & clinic roles", icon: "🩺" },
+  { value: "none", label: "Community member", blurb: "Not a student — here to help out", icon: "🤝" },
+];
+
 export const FACULTY_LABELS: Record<string, string> = {
   medicine: "Medicine",
   nursing: "Nursing",

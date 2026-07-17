@@ -21,13 +21,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const { full_name, role, faculty, interests, bio, zone_id } = body as {
+  const { full_name, role, faculty, interests, bio, zone_id, education_level } = body as {
     full_name?: string;
     role?: ContractRole;
     faculty?: string;
     interests?: string[];
     bio?: string;
     zone_id?: string;
+    education_level?: string;
   };
 
   if (role !== "volunteer" && role !== "org") {
@@ -72,6 +73,7 @@ export async function POST(request: NextRequest) {
     interests,
     bio,
     zone_id,
+    education_level,
   });
 
   if (roleError) {

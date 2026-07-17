@@ -2,14 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 
 import { createClient, isProviderEnabled } from "@/lib/supabase/client";
 
 /**
  * CareYuk — Login  ·  app/login/page.tsx
- * Owns role → route handoff: volunteer → /volunteer/explore, org → /org
+ * Owns role → route handoff: volunteer → /volunteer, org → /org
  * npm i framer-motion. Fonts via next/font: --font-display and --font-body both resolve to Geist.
  */
 
@@ -68,7 +69,15 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [redirecting, setRedirecting] = useState<Role | null>(null);
   const isVol = role === "volunteer";
+
+  // Play a branded loading transition, then navigate — so the jump from login
+  // to the dashboard fades through instead of hard-cutting.
+  const goToDashboard = (r: Role) => {
+    setRedirecting(r);
+    setTimeout(() => router.push(r === "org" ? "/org" : "/volunteer"), 750);
+  };
   const count = useCountUp(12480);
   const typed = useTypewriter();
 
@@ -110,7 +119,7 @@ export default function LoginPage() {
     }
 
     const profile = await res.json();
-    router.push(profile.role === "org" ? "/org" : "/volunteer/explore");
+    goToDashboard(profile.role === "org" ? "org" : "volunteer");
   };
 
   const onGoogle = async () => {
@@ -142,6 +151,7 @@ export default function LoginPage() {
   ];
 
   return (
+    <>
     <div className="loginWrap flex min-h-screen w-full overflow-hidden bg-[#F8F9F7] text-[#202320]">
       {/* ---------- LEFT BRAND PANEL ---------- */}
       <div className="brandPanel relative flex basis-[46%] shrink-0 flex-col justify-between overflow-hidden px-12 py-[52px] text-[#EAF7E3]"
@@ -153,13 +163,24 @@ export default function LoginPage() {
         <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(1000px 600px at 30% 20%,rgba(201,243,176,.10),transparent 60%)" }} />
 
         {/* brand row */}
-        <motion.div className="relative flex items-center gap-[13px]"
+        <motion.div className="relative"
           initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease }}>
-          <div className="relative flex h-[52px] w-[52px] items-center justify-center rounded-2xl border border-[#EAF7E3]/20 bg-[#EAF7E3]/[.14] backdrop-blur">
-            <Image src="/careyuk-logo.png" alt="CareYuk" width={36} height={36}
-              className="object-contain [filter:brightness(1.35)_saturate(1.1)_drop-shadow(0_2px_6px_rgba(143,209,79,.5))]" />
-          </div>
-          <span className="text-2xl font-bold tracking-[-.02em] text-[#F8F9F7]" style={{ fontFamily: disp }}>CareYuk</span>
+          <Link href="/about" className="flex items-center gap-[13px]" aria-label="About CareYuk">
+            <div className="relative flex h-[52px] w-[52px] items-center justify-center rounded-2xl border border-[#EAF7E3]/20 bg-[#EAF7E3]/[.14] backdrop-blur">
+              <Image src="/careyuk-logo.png" alt="CareYuk" width={36} height={36}
+                className="object-contain [filter:brightness(1.35)_saturate(1.1)_drop-shadow(0_2px_6px_rgba(143,209,79,.5))]" />
+            </div>
+            <span className="text-2xl font-bold tracking-[-.02em] text-[#F8F9F7]" style={{ fontFamily: disp }}>CareYuk</span>
+          </Link>
+        </motion.div>
+
+        {/* nudge toward the about page */}
+        <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.1, duration: 0.6, ease }} className="relative -mt-4 max-[900px]:mt-2 max-[900px]:mb-1">
+          <Link href="/about" className="group inline-flex items-center gap-2 rounded-full border border-[#8FD14F]/40 bg-[#8FD14F]/15 px-3.5 py-2 text-[12.5px] font-bold text-[#EAF7E3] backdrop-blur transition-colors hover:bg-[#8FD14F]/25">
+            <motion.span animate={{ rotate: [0, 16, -8, 0] }} transition={{ duration: 1.8, repeat: Infinity, repeatDelay: 1.6 }}>👋</motion.span>
+            Click me to know about us
+            <motion.span animate={{ x: [0, 4, 0] }} transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}>→</motion.span>
+          </Link>
         </motion.div>
 
         {/* hero */}
@@ -299,6 +320,33 @@ export default function LoginPage() {
         }
       `}</style>
     </div>
+
+    {/* branded loading transition into the dashboard */}
+    <AnimatePresence>
+      {redirecting && (
+        <motion.div
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-6"
+          style={{ background: "linear-gradient(135deg,#2a5b39 0%,#204630 40%,#14301e 100%)" }}
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.35, ease }}>
+          <motion.div className="relative flex h-24 w-24 items-center justify-center"
+            initial={{ scale: 0.82, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.4, ease }}>
+            <motion.span className="absolute inset-0 rounded-full border-[3px] border-[#8FD14F]/25 border-t-[#8FD14F]"
+              animate={{ rotate: 360 }} transition={{ duration: 0.9, repeat: Infinity, ease: "linear" }} />
+            <motion.div animate={{ scale: [1, 1.08, 1] }} transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}>
+              <Image src="/careyuk-logo.png" alt="CareYuk" width={52} height={52}
+                className="object-contain [filter:brightness(1.3)_drop-shadow(0_4px_14px_rgba(143,209,79,.5))]" />
+            </motion.div>
+          </motion.div>
+          <div className="text-center">
+            <div className="text-[19px] font-bold text-[#F8F9F7]" style={{ fontFamily: disp }}>
+              {redirecting === "org" ? "Opening your dashboard" : "Finding where you’re needed"}
+            </div>
+            <div className="mt-1 text-[13px] text-[#EAF7E3]/70">Just a moment…</div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+    </>
   );
 }
 
